@@ -1,6 +1,5 @@
-lib: 
-{ fst = let
-    
+lib:
+let
   input = builtins.readFile ./input;
   debug = e: x: (builtins.trace (builtins.toJSON e) x);
   parse-int = { start, ...} @ state:
@@ -75,15 +74,30 @@ lib:
                 in
                   { start = s4.start; result = { id = game-id; sets = s4.result; }; };
   games = (parse-many parse-game { start = 0; }).result;
-  possible = { red = 12; green = 13; blue = 14; };
-  solution = lib.lists.foldl  (sum: { id, sets }:
-    let valid = lib.lists.all ({red ? 0, green ? 0, blue ? 0}:
-          (green <= possible.green) && (blue <= possible.blue) && (red <= possible.red)) sets; in
-      if valid then
-        sum + id
-      else
-        sum
-  ) 0 (debug games games);
-in
-  solution;
+in 
+{ fst = let    
+    possible = { red = 12; green = 13; blue = 14; };
+    solution = lib.lists.foldl  (sum: { id, sets }:
+      let valid = lib.lists.all ({red ? 0, green ? 0, blue ? 0}:
+            (green <= possible.green) && (blue <= possible.blue) && (red <= possible.red)) sets; in
+        if valid then
+          sum + id
+        else
+          sum
+    ) 0 (debug games games);
+  in
+    solution;
+  snd = lib.lists.foldl (sum: {id, sets}:
+    let
+      max = a: b: if a > b then a else b;
+      minimum = lib.lists.foldl ( min:
+        {red ? 0, green ? 0, blue ? 0}: {
+          red = max min.red red;
+          green = max min.green green;
+          blue = max min.blue blue;
+        })
+        { red = 0; blue=0; green= 0; } sets;
+      power = minimum.red * minimum.green * minimum.blue;
+    in
+      sum + power) 0 games;
 }
