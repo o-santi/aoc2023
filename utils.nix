@@ -61,5 +61,20 @@ lib: rec {
         tried.value
       else
         state // { result = { type = "fail"; reason = tried.result.reason;}; };
+  interspersed = p: sep: state:
+    let res = p state; in
+    if res.result.type == "ok" then
+      let try-sep = sep res; in
+      if try-sep.result.type == "ok" then
+        let rest = interspersed p sep try-sep; in
+        rest // {
+          result = { type = "ok";
+                     val = [res.result.val] ++ rest.result.val;
+                   };
+        }
+      else
+        res // { result = { type = "ok"; val = [res.result.val]; };}
+    else
+      state // res.result;
 }
 

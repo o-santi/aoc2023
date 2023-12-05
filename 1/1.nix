@@ -1,4 +1,4 @@
-lib:
+{ lib, ...} :
 { fst =
     let input = builtins.readFile ./input;
         solve = (input:
