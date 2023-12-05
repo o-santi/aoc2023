@@ -42,6 +42,5 @@ lib:
             acc + (10 * final.first) + final.last
           ) 0 lines);
     in
-      solve input;
 }
 

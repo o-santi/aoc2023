@@ -1,39 +1,7 @@
-lib:
+{ lib, parse-int, expect, parse-many, ... }:
 let
   input = builtins.readFile ./input;
   debug = e: x: (builtins.trace (builtins.toJSON e) x);
-  parse-int = { start, ...} @ state:
-    let helper = curr:
-          let char = (builtins.substring curr 1 input); in
-          if char == "" then [] else 
-            let digit = lib.strings.charToInt char - 48; in
-            if (digit >= 0) && (digit < 10) then
-              [digit] ++ helper (curr + 1)
-            else
-              [];
-        digits = helper start;
-        result = if digits != [] then
-          { result = lib.lists.foldl (num: digit: (10 * num) + digit) 0 digits; }
-         else
-           { fail = true; };
-    in
-      state // { start = start + (builtins.length digits); } // result;
-  expect = word: { start, ... } @ state:
-    let word-len = builtins.stringLength word;
-        subs = builtins.substring start word-len input;
-        result = if word == subs then { start = start + word-len; result = word; } else { fail = "Expected '${word}' but got '${subs}'"; };
-    in
-      state // result;
-  parse-many = p: state:
-    let try = p state; in
-    if !(try ? "fail") then
-      let others = parse-many p (state // { start = try.start; }); in
-      state // {
-        start = others.start ;
-        result = [try.result] ++ others.result;
-      }
-    else
-      state // { result = []; fail = try.fail;};
   parse-color = s0:
     let s1 = parse-int s0;
         count = s1.result;
@@ -73,7 +41,7 @@ let
                   s4 = parse-many parse-set s3;
                 in
                   { start = s4.start; result = { id = game-id; sets = s4.result; }; };
-  games = (parse-many parse-game { start = 0; }).result;
+  games = (parse-many parse-game { inherit input; start = 0;  }).result;
 in 
 { fst = let    
     possible = { red = 12; green = 13; blue = 14; };
